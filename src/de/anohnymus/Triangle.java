@@ -51,7 +51,7 @@ public class Triangle extends Polygon {
 	}
 	
 	public double getArea(){
-		return 0.5*(a.x()*(b.y() - c.y()) + b.x()*(c.y() - a.y()) + c.x()*(a.y() - b.y()));
+		return Math.abs(0.5*(a.x()*(b.y() - c.y()) + b.x()*(c.y() - a.y()) + c.x()*(a.y() - b.y())));
 	}
 	
 	public Point_dt randomPoint(){

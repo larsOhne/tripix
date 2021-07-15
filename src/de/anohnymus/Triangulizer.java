@@ -89,7 +89,10 @@ public class Triangulizer extends SwingWorker<ArrayList<Triangle>, String> {
 		
 		publish("calculation successful!");
 		
-		
+		// Save all points to an Arraylist
+		ArrayList<Point_dt> testPoints = new ArrayList<>();
+
+
 		//Delaunay initialisieren:
 		publish("initialize Delaunay Triangulation...");
 		Delaunay_Triangulation dt = new Delaunay_Triangulation(weightedRandomPoints(gradMatrix,settings.getNumOfVertices()));
@@ -98,7 +101,9 @@ public class Triangulizer extends SwingWorker<ArrayList<Triangle>, String> {
 		
 		publish("feed " + settings.getNumOfRandoms() + " random points to algorithm");
 		for(int i=0; i< settings.getNumOfRandoms(); i++){
-			dt.insertPoint(new Point_dt(Math.random()*toProcess.getWidth(), Math.random()*toProcess.getHeight()));
+			Point_dt randP = new Point_dt(Math.random()*toProcess.getWidth(), Math.random()*toProcess.getHeight());
+			dt.insertPoint(randP);
+			testPoints.add(randP);
 		}
 		
 		//Punkte am Rand des Bilds generieren
@@ -125,41 +130,48 @@ public class Triangulizer extends SwingWorker<ArrayList<Triangle>, String> {
 		
 		//Dreiecke berechnen
 		publish("create triangles");
-		Iterator<Triangle_dt> trianglesIterator = dt.trianglesIterator();
+		Triangle_dt[] trianglesArray = dt.computeTriangles();
 		ArrayList<Triangle> triangles = new ArrayList<>();
 		Graphics2D g2 = processed.createGraphics();
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		
-		while(trianglesIterator.hasNext()){
+
+		for(int i=0; i < trianglesArray.length; i++){
+			Triangle_dt tr = trianglesArray[i];
 			Triangle p = null;
-			Triangle_dt tr = trianglesIterator.next();
+
 			if(tr.p1() != null && tr.p2() != null && tr.p3() != null){
 				p = new Triangle(tr);
 				triangles.add(p);
-				
+
 				//Bestimme die Farben der Dreiecke
 				int a=0,r=0,g=0,b=0;
 				int numOfPixels = (int) (p.getArea()*settings.getColorDenssity()) + 1;
 				for(int j =0; j<numOfPixels;j++){
 					Point_dt testPixel = p.randomPoint();
 					
-						Color c = new Color(toProcess.getRGB((int)testPixel.x(), (int) testPixel.y()));
-						r += c.getRed();
-						g += c.getGreen();
-						b += c.getBlue();
-						a += c.getAlpha();
+					Color c = new Color(toProcess.getRGB((int)testPixel.x(), (int) testPixel.y()));
+					r += c.getRed();
+					g += c.getGreen();
+					b += c.getBlue();
+					a += c.getAlpha();
 				}
-				
+
 				r /= numOfPixels;
 				g /= numOfPixels;
 				b /= numOfPixels;
 				a /= numOfPixels;
-				
+
+
 				p.setColor(new Color(r,g,b,a));
+
 				p.draw(g2);
-				
+
+
 				publish(triangles.size() +  " triangles created");
 			}
+			else
+				publish("faulty triangle");
+
 			
 		}
 
